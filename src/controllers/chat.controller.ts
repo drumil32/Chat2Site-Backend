@@ -1,11 +1,11 @@
-import { Request, Response, NextFunction, RequestHandler } from 'express';
-import asyncHandler from 'express-async-handler';
 import * as Boom from '@hapi/boom';
+import { NextFunction, Request, RequestHandler, Response } from 'express';
+import asyncHandler from 'express-async-handler';
 import { ZodError } from 'zod';
-import { chatService } from '../services/chat.service';
-import { ChatRequest, ChatRequestSchema } from '../types/chat.types';
 import { logger } from '../logger';
 import { getRealIP } from '../middleware/logging.middleware';
+import { chatService } from '../services/chat.service';
+import { ChatRequestSchema } from '../types/chat.types';
 
 export class ChatController {
   public chat: RequestHandler = asyncHandler(async (req: Request, res: Response, next: NextFunction): Promise<void> => {
