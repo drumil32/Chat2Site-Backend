@@ -1,22 +1,8 @@
 import * as Boom from '@hapi/boom';
 import axios, { AxiosInstance, AxiosResponse, AxiosError } from 'axios';
 import { logger } from '../logger';
+import { AIRequest, AIResponse, AIRequestSchema, AIResponseSchema } from '../types/ai.types';
 
-export interface AIRequest {
-  message: string;
-  lastResponseId?: string;
-  requestId?: string;
-}
-
-export interface AIResponse {
-  response: string;
-  conversationId: string;
-  metadata?: {
-    model?: string;
-    tokens?: number;
-    processingTime?: number;
-  };
-}
 
 class AIService {
   private readonly axiosInstance: AxiosInstance;
@@ -82,29 +68,32 @@ class AIService {
   }
 
   async processMessage(request: AIRequest): Promise<AIResponse> {
+    // Validate input using zod schema
+    const validatedRequest = AIRequestSchema.parse(request);
+    
     const startTime = Date.now();
     
     logger.info('Calling AI service', {
-      requestId: request.requestId,
-      hasLastResponseId: !!request.lastResponseId,
-      messageLength: request.message.length
+      requestId: validatedRequest.requestId,
+      hasLastResponseId: !!validatedRequest.lastResponseId,
+      messageLength: validatedRequest.message.length
     });
 
     const aiPayload = {
-      message: request.message,
-      lastResponseId: request.lastResponseId,
+      message: validatedRequest.message,
+      lastResponseId: validatedRequest.lastResponseId,
       timestamp: new Date().toISOString()
     };
 
     logger.debug('AI service request payload', {
-      requestId: request.requestId,
+      requestId: validatedRequest.requestId,
       payload: aiPayload
     });
 
     try {
       const response: AxiosResponse<any> = await this.axiosInstance.post('/api/chat', aiPayload, {
         headers: {
-          'X-Request-ID': request.requestId || ''
+          'X-Request-ID': validatedRequest.requestId || ''
         }
       });
 
@@ -112,7 +101,7 @@ class AIService {
       const aiResponse = response.data;
 
       logger.info('AI service response received', {
-        requestId: request.requestId,
+        requestId: validatedRequest.requestId,
         processingTime: `${processingTime}ms`,
         responseLength: aiResponse.response?.length || 0,
         hasConversationId: !!aiResponse.conversationId,
@@ -120,11 +109,11 @@ class AIService {
       });
 
       logger.debug('AI service response payload', {
-        requestId: request.requestId,
+        requestId: validatedRequest.requestId,
         response: aiResponse
       });
 
-      return {
+      const responseData = {
         response: aiResponse.response || aiResponse.message || 'No response from AI service',
         conversationId: aiResponse.conversationId,
         metadata: {
@@ -133,12 +122,15 @@ class AIService {
           processingTime
         }
       };
+
+      // Validate response using zod schema
+      return AIResponseSchema.parse(responseData);
     } catch (error) {
       const axiosError = error as AxiosError;
       const processingTime = Date.now() - startTime;
 
       logger.error('AI service error response', {
-        requestId: request.requestId,
+        requestId: validatedRequest.requestId,
         status: axiosError.response?.status,
         statusText: axiosError.response?.statusText,
         processingTime: `${processingTime}ms`,

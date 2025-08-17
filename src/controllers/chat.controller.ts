@@ -1,7 +1,9 @@
 import { Request, Response, NextFunction, RequestHandler } from 'express';
 import asyncHandler from 'express-async-handler';
 import * as Boom from '@hapi/boom';
-import { chatService, ChatRequest } from '../services/chat.service';
+import { ZodError } from 'zod';
+import { chatService } from '../services/chat.service';
+import { ChatRequest, ChatRequestSchema } from '../types/chat.types';
 import { logger } from '../logger';
 import { getRealIP } from '../middleware/logging.middleware';
 
@@ -23,76 +25,59 @@ export class ChatController {
       bodySize: JSON.stringify(req.body).length
     });
 
-    const { msg, token } = req.body as ChatRequest;
+    try {
+      // Validate request using zod schema
+      const validatedRequest = ChatRequestSchema.parse({
+        ...req.body,
+        ip,
+        requestId: req.requestId
+      });
 
-    // Validate required fields
-    if (!msg || typeof msg !== 'string' || msg.trim().length === 0) {
-      logger.warn('Chat request validation failed - empty message', { 
+      logger.info('Chat request validated successfully', { 
         ip, 
         requestId: req.requestId,
-        requestBody: req.body,
-        validation: {
-          messageProvided: !!msg,
-          messageType: typeof msg,
-          messageLength: msg?.length || 0
+        validatedRequest: {
+          messageLength: validatedRequest.msg.length,
+          hasToken: !!validatedRequest.token,
+          tokenLength: validatedRequest.token?.length
         }
       });
-      
-      throw Boom.badRequest('Message is required and cannot be empty');
-    }
 
-    // Validate token if provided
-    if (token && typeof token !== 'string') {
-      logger.warn('Chat request validation failed - invalid token type', { 
+      const chatResponse = await chatService.processChat(validatedRequest);
+
+      const responseTime = Date.now() - startTime;
+      const successResponse = {
+        success: true,
+        data: chatResponse
+      };
+
+      logger.info('Chat request processed successfully', { 
         ip, 
         requestId: req.requestId,
-        requestBody: req.body,
-        validation: {
-          tokenProvided: !!token,
-          tokenType: typeof token
+        responseTime: `${responseTime}ms`,
+        responseBody: successResponse,
+        processingMeta: {
+          token: chatResponse.token,
+          responseId: chatResponse.responseId,
+          isNewToken: chatResponse.isNewToken,
+          remainingRequests: chatResponse.remainingRequests
         }
       });
-      
-      throw Boom.badRequest('Token must be a string');
+
+      res.status(200).json(successResponse);
+    } catch (error: any) {
+      if (error instanceof ZodError) {
+        logger.warn('Chat request validation failed', { 
+          ip, 
+          requestId: req.requestId,
+          requestBody: req.body,
+          validationErrors: error.errors
+        });
+        
+        throw Boom.badRequest(`Validation failed: ${error.errors.map((e: any) => e.message).join(', ')}`);
+      }
+      throw error;
     }
-
-    logger.info('Chat request validated successfully', { 
-      ip, 
-      requestId: req.requestId,
-      validatedRequest: {
-        messageLength: msg.length,
-        hasToken: !!token,
-        tokenLength: token?.length
-      }
-    });
-
-    const chatResponse = await chatService.processChat({ 
-      msg, 
-      token, 
-      ip, 
-      requestId: req.requestId 
-    });
-
-    const responseTime = Date.now() - startTime;
-    const successResponse = {
-      success: true,
-      data: chatResponse
-    };
-
-    logger.info('Chat request processed successfully', { 
-      ip, 
-      requestId: req.requestId,
-      responseTime: `${responseTime}ms`,
-      responseBody: successResponse,
-      processingMeta: {
-        token: chatResponse.token,
-        responseId: chatResponse.responseId,
-        isNewToken: chatResponse.isNewToken,
-        remainingRequests: chatResponse.remainingRequests
-      }
-    });
-
-    res.status(200).json(successResponse);
   });
 }
 
