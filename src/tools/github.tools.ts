@@ -12,35 +12,35 @@ class GitHubTools {
     name: 'createRepository',
     description: 'Create a new GitHub repository. This should only be called once per conversation.',
     parameters: CreateRepoRequestSchema,
-    execute: githubService.createRepository
+    execute: githubService.createRepository.bind(githubService)
   });
 
   createFileTool = tool({
     name: 'createFile',
     description: 'Create a new file in a GitHub repository',
     parameters: CreateFileRequestSchema,
-    execute: githubService.createFile
+    execute: githubService.createFile.bind(githubService)
   });
 
   readFileTool = tool({
     name: 'readFile',
     description: 'Read a file from a GitHub repository',
     parameters: ReadFileRequestSchema,
-    execute: githubService.readFile
+    execute: githubService.readFile.bind(githubService)
   });
 
   updateFileTool = tool({
     name: 'updateFile',
     description: 'Update an existing file in a GitHub repository',
     parameters: CreateFileRequestSchema,
-    execute: githubService.updateFile
+    execute: githubService.updateFile.bind(githubService)
   });
 
   enablePagesTool = tool({
     name: 'enableGitHubPages',
     description: 'Enable GitHub Pages for a repository',
     parameters: EnablePagesRequestSchema,
-    execute: githubService.enableGitHubPages
+    execute: githubService.enableGitHubPages.bind(githubService)
   });
 }
 

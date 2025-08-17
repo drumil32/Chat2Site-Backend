@@ -74,7 +74,7 @@ process.on('unhandledRejection', (reason, promise) => {
   logger.error('Unhandled promise rejection', { reason, promise });
   process.exit(1);
 });
-
+console.log(PORT)
 app.listen(PORT, () => {
   logger.info('Server started successfully', {
     port: PORT,

@@ -1,0 +1,705 @@
+{
+  "info": {
+    "name": "Loveable Backend API",
+    "description": "API collection for Loveable Backend - A TypeScript Express backend with Redis, Winston logging, and zod validation",
+    "version": "1.0.0",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "noauth"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Set base URL if not already set",
+          "if (!pm.environment.get('BASE_URL')) {",
+          "    pm.environment.set('BASE_URL', 'http://localhost:3000');",
+          "}"
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "BASE_URL",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health & Status",
+      "item": [
+        {
+          "name": "Root Endpoint",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has correct structure', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('message');",
+                  "    pm.expect(responseJson).to.have.property('timestamp');",
+                  "    pm.expect(responseJson).to.have.property('version');",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(1000);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/",
+              "host": ["{{BASE_URL}}"],
+              "path": [""]
+            },
+            "description": "Basic endpoint to check if the server is running"
+          },
+          "response": [
+            {
+              "name": "Success Response",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{BASE_URL}}/",
+                  "host": ["{{BASE_URL}}"],
+                  "path": [""]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"message\": \"Backend is running!\",\n  \"timestamp\": \"2024-01-15T10:30:00.000Z\",\n  \"version\": \"1.0.0\"\n}"
+            }
+          ]
+        },
+        {
+          "name": "Health Check",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Health check response structure', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('status', 'OK');",
+                  "    pm.expect(responseJson).to.have.property('timestamp');",
+                  "    pm.expect(responseJson).to.have.property('uptime');",
+                  "    pm.expect(responseJson).to.have.property('version');",
+                  "});",
+                  "",
+                  "pm.test('Uptime is a number', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.uptime).to.be.a('number');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{BASE_URL}}/health",
+              "host": ["{{BASE_URL}}"],
+              "path": ["health"]
+            },
+            "description": "Health check endpoint for monitoring and load balancers"
+          },
+          "response": [
+            {
+              "name": "Health Check Success",
+              "originalRequest": {
+                "method": "GET",
+                "header": [],
+                "url": {
+                  "raw": "{{BASE_URL}}/health",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["health"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"status\": \"OK\",\n  \"timestamp\": \"2024-01-15T10:30:00.000Z\",\n  \"uptime\": 3600.123,\n  \"version\": \"1.0.0\"\n}"
+            }
+          ]
+        }
+      ],
+      "description": "Endpoints for checking server health and status"
+    },
+    {
+      "name": "Chat API",
+      "item": [
+        {
+          "name": "Send Chat Message (New User)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has success structure', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('success', true);",
+                  "    pm.expect(responseJson).to.have.property('data');",
+                  "});",
+                  "",
+                  "pm.test('Chat response structure', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    const data = responseJson.data;",
+                  "    ",
+                  "    pm.expect(data).to.have.property('message');",
+                  "    pm.expect(data).to.have.property('token');",
+                  "    pm.expect(data).to.have.property('responseId');",
+                  "    pm.expect(data).to.have.property('isNewToken', true);",
+                  "    pm.expect(data).to.have.property('remainingRequests');",
+                  "    pm.expect(data).to.have.property('aiMetadata');",
+                  "});",
+                  "",
+                  "pm.test('Save token for subsequent requests', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    if (responseJson.data && responseJson.data.token) {",
+                  "        pm.environment.set('CHAT_TOKEN', responseJson.data.token);",
+                  "        pm.environment.set('LAST_RESPONSE_ID', responseJson.data.responseId);",
+                  "    }",
+                  "});",
+                  "",
+                  "pm.test('Response time is acceptable', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(30000);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "User-Agent",
+                "value": "Postman/{{$randomUserAgent}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"msg\": \"Hello! Can you help me create a simple HTML landing page for my business?\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/chat",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "chat"]
+            },
+            "description": "Send a chat message without a token (new user). This will create a new token and conversation."
+          },
+          "response": [
+            {
+              "name": "New User Success",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"msg\": \"Hello! Can you help me create a simple HTML landing page?\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/chat",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "chat"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"message\": \"I'd be happy to help you create a simple HTML landing page! Let me start by understanding your business needs and then create a beautiful, responsive landing page for you.\",\n    \"token\": \"a1b2c3d4-e5f6-7890-abcd-ef1234567890\",\n    \"responseId\": \"resp_123456789\",\n    \"isNewToken\": true,\n    \"remainingRequests\": 19,\n    \"aiMetadata\": {\n      \"model\": \"gpt-4\",\n      \"tokens\": 150,\n      \"processingTime\": 2500,\n      \"conversationId\": \"conv_987654321\"\n    }\n  }\n}"
+            }
+          ]
+        },
+        {
+          "name": "Send Chat Message (Existing User)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response has success structure', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('success', true);",
+                  "    pm.expect(responseJson).to.have.property('data');",
+                  "});",
+                  "",
+                  "pm.test('Existing user response structure', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    const data = responseJson.data;",
+                  "    ",
+                  "    pm.expect(data).to.have.property('message');",
+                  "    pm.expect(data).to.have.property('token');",
+                  "    pm.expect(data).to.have.property('responseId');",
+                  "    pm.expect(data).to.have.property('isNewToken', false);",
+                  "    pm.expect(data).to.have.property('remainingRequests');",
+                  "});",
+                  "",
+                  "pm.test('Token matches provided token', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    const requestToken = JSON.parse(pm.request.body.raw).token;",
+                  "    pm.expect(responseJson.data.token).to.equal(requestToken);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "User-Agent",
+                "value": "Postman/{{$randomUserAgent}}"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"msg\": \"Can you make it responsive and add some CSS animations?\",\n  \"token\": \"{{CHAT_TOKEN}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/chat",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "chat"]
+            },
+            "description": "Send a chat message with an existing token (continuing conversation). Make sure to run the 'New User' request first to get a token."
+          },
+          "response": [
+            {
+              "name": "Existing User Success",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"msg\": \"Can you make it responsive and add some CSS animations?\",\n  \"token\": \"a1b2c3d4-e5f6-7890-abcd-ef1234567890\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/chat",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "chat"]
+                }
+              },
+              "status": "OK",
+              "code": 200,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"success\": true,\n  \"data\": {\n    \"message\": \"Absolutely! I'll enhance the landing page with responsive design and smooth CSS animations. Let me add media queries for mobile devices and some elegant animations for better user experience.\",\n    \"token\": \"a1b2c3d4-e5f6-7890-abcd-ef1234567890\",\n    \"responseId\": \"resp_123456790\",\n    \"isNewToken\": false,\n    \"remainingRequests\": 18,\n    \"aiMetadata\": {\n      \"model\": \"gpt-4\",\n      \"tokens\": 200,\n      \"processingTime\": 3200,\n      \"conversationId\": \"conv_987654321\"\n    }\n  }\n}"
+            }
+          ]
+        }
+      ],
+      "description": "Chat API endpoints for conversing with the AI coding assistant"
+    },
+    {
+      "name": "Validation Tests",
+      "item": [
+        {
+          "name": "Invalid Request - Empty Message",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Error response structure', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('error');",
+                  "    pm.expect(responseJson).to.have.property('message');",
+                  "    pm.expect(responseJson).to.have.property('statusCode', 400);",
+                  "});",
+                  "",
+                  "pm.test('Error message mentions validation', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson.message.toLowerCase()).to.include('validation');",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"msg\": \"\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/chat",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "chat"]
+            },
+            "description": "Test validation with empty message"
+          },
+          "response": []
+        },
+        {
+          "name": "Invalid Request - Missing Message",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});",
+                  "",
+                  "pm.test('Error response structure', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('error');",
+                  "    pm.expect(responseJson).to.have.property('message');",
+                  "    pm.expect(responseJson).to.have.property('statusCode', 400);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"test-token\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/chat",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "chat"]
+            },
+            "description": "Test validation with missing message field"
+          },
+          "response": []
+        },
+        {
+          "name": "Invalid Request - Invalid JSON",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 400', function () {",
+                  "    pm.response.to.have.status(400);",
+                  "});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"msg\": \"Hello\",\n  \"invalid\": \"json\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/chat",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "chat"]
+            },
+            "description": "Test with invalid JSON format"
+          },
+          "response": []
+        }
+      ],
+      "description": "Tests for request validation and error handling"
+    },
+    {
+      "name": "Rate Limiting Tests",
+      "item": [
+        {
+          "name": "Test Rate Limiting",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// This test should be run after making 20 requests",
+                  "// For now, just check the response structure",
+                  "if (pm.response.code === 429) {",
+                  "    pm.test('Rate limit response', function () {",
+                  "        const responseJson = pm.response.json();",
+                  "        pm.expect(responseJson).to.have.property('error');",
+                  "        pm.expect(responseJson).to.have.property('message');",
+                  "        pm.expect(responseJson.message.toLowerCase()).to.include('rate limit');",
+                  "    });",
+                  "} else {",
+                  "    pm.test('Normal response when under rate limit', function () {",
+                  "        pm.response.to.have.status(200);",
+                  "    });",
+                  "}"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"msg\": \"Test rate limiting - request {{$randomInt}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/chat",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "chat"]
+            },
+            "description": "Test rate limiting (20 requests per day per IP). Run this multiple times to test rate limiting."
+          },
+          "response": [
+            {
+              "name": "Rate Limited Response",
+              "originalRequest": {
+                "method": "POST",
+                "header": [
+                  {
+                    "key": "Content-Type",
+                    "value": "application/json"
+                  }
+                ],
+                "body": {
+                  "mode": "raw",
+                  "raw": "{\n  \"msg\": \"Test message\"\n}",
+                  "options": {
+                    "raw": {
+                      "language": "json"
+                    }
+                  }
+                },
+                "url": {
+                  "raw": "{{BASE_URL}}/api/chat",
+                  "host": ["{{BASE_URL}}"],
+                  "path": ["api", "chat"]
+                }
+              },
+              "status": "Too Many Requests",
+              "code": 429,
+              "_postman_previewlanguage": "json",
+              "header": [
+                {
+                  "key": "Content-Type",
+                  "value": "application/json"
+                }
+              ],
+              "cookie": [],
+              "body": "{\n  \"error\": \"Too Many Requests\",\n  \"message\": \"Rate limit exceeded. You can make 20 requests per day.\",\n  \"statusCode\": 429\n}"
+            }
+          ]
+        }
+      ],
+      "description": "Tests for rate limiting functionality (20 requests per day per IP)"
+    },
+    {
+      "name": "Load Testing",
+      "item": [
+        {
+          "name": "Performance Test - Chat",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status code is 200', function () {",
+                  "    pm.response.to.have.status(200);",
+                  "});",
+                  "",
+                  "pm.test('Response time is under 10 seconds', function () {",
+                  "    pm.expect(pm.response.responseTime).to.be.below(10000);",
+                  "});",
+                  "",
+                  "pm.test('Response has valid structure', function () {",
+                  "    const responseJson = pm.response.json();",
+                  "    pm.expect(responseJson).to.have.property('success', true);",
+                  "    pm.expect(responseJson).to.have.property('data');",
+                  "});",
+                  "",
+                  "// Log response time for monitoring",
+                  "console.log('Response time: ' + pm.response.responseTime + 'ms');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"msg\": \"Create a simple HTML page with header, main content, and footer sections. Use semantic HTML and basic CSS styling.\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "url": {
+              "raw": "{{BASE_URL}}/api/chat",
+              "host": ["{{BASE_URL}}"],
+              "path": ["api", "chat"]
+            },
+            "description": "Performance test for chat endpoint with longer message"
+          },
+          "response": []
+        }
+      ],
+      "description": "Performance and load testing endpoints"
+    }
+  ]
+}

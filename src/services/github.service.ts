@@ -25,6 +25,7 @@ class GitHubService {
   private readonly owner: string;
 
   constructor() {
+    console.log(`process.env.GITHUB_TOKEN ${process.env.GITHUB_TOKEN}`)
     const token = process.env.GITHUB_TOKEN || '';
     const baseUrl = process.env.GITHUB_BASE_API || 'https://api.github.com';
     this.owner = process.env.GITHUB_OWNER || '';

@@ -17,7 +17,7 @@ export const errorMiddleware = (err: any, req: Request, res: Response, next: Nex
     } else if (err.code === 11000) {
       boomError = Boom.conflict('Resource already exists');
     } else {
-      boomError = Boom.internal(err.message || 'Internal Server Error');
+      boomError = Boom.internal( 'Internal Server Error');
     }
 
 
@@ -42,7 +42,7 @@ export const errorMiddleware = (err: any, req: Request, res: Response, next: Nex
 
   // Send error response
   res.status(boomError.output.statusCode).json({
-    ...boomError.output.payload,
+    message:boomError.output.payload.message,
     requestId,
     ...(process.env.NODE_ENV === 'development' && { stack: err.stack })
   });

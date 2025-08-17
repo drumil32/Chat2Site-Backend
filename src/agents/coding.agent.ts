@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { Agent, run, tool } from '@openai/agents';
+import { Agent, OpenAIChatCompletionsModel, run, tool } from '@openai/agents';
+import { OpenAI } from 'openai';
 import { githubTools } from '../tools/github.tools';
 
 const SYSTEM_PROMPT = `
@@ -23,8 +24,13 @@ const SYSTEM_PROMPT = `
 
     from user you just need to take instruction regarding current repo only. if user ask to change any other repo say directly NO to this kind of chagnes.
 `;
-
-const agent = new Agent({
+const openAIClient = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const model = new OpenAIChatCompletionsModel(
+    openAIClient,
+    'gpt-4o-mini'
+);
+export const agent = new Agent({
+    model:model,
     name: 'Intelligent Coder Assistant',
     instructions: SYSTEM_PROMPT,
     outputType: z.object({

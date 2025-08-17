@@ -5,7 +5,7 @@ export const GitHubRepositorySchema = z.object({
   id: z.number(),
   name: z.string(),
   full_name: z.string(),
-  description: z.string().nullable(),
+  description: z.string().nullish(),
   private: z.boolean(),
   html_url: z.string().url(),
   clone_url: z.string().url(),
@@ -22,7 +22,7 @@ export const GitHubRepositorySchema = z.object({
 export const GitHubPagesSchema = z.object({
   url: z.string().url(),
   status: z.string(),
-  cname: z.string().nullable(),
+  cname: z.string().nullish(),
   html_url: z.string().url(),
   source: z.object({
     branch: z.string(),
@@ -57,10 +57,10 @@ export const GitHubFileResponseSchema = z.object({
 
 export const CreateRepoRequestSchema = z.object({
   name: z.string().min(1, 'Repository name is required'),
-  description: z.string().optional(),
-  private: z.boolean().optional().default(false),
-  autoInit: z.boolean().optional().default(true),
-  requestId: z.string().optional(),
+  description: z.string().nullish(),
+  private: z.boolean().nullish().default(false),
+  autoInit: z.boolean().nullish().default(true),
+  requestId: z.string().nullish(),
 });
 
 export const CreateFileRequestSchema = z.object({
@@ -68,25 +68,25 @@ export const CreateFileRequestSchema = z.object({
   repo: z.string().min(1, 'Repository name is required'),
   path: z.string().min(1, 'File path is required'),
   content: z.string(),
-  message: z.string().optional(),
-  branch: z.string().optional().default('main'),
-  requestId: z.string().optional(),
+  message: z.string().nullish(),
+  branch: z.string().nullish().default('main'),
+  requestId: z.string().nullish(),
 });
 
 export const ReadFileRequestSchema = z.object({
   owner: z.string().min(1, 'Owner is required'),
   repo: z.string().min(1, 'Repository name is required'),
   path: z.string().min(1, 'File path is required'),
-  branch: z.string().optional(),
-  requestId: z.string().optional(),
+  branch: z.string().nullish(),
+  requestId: z.string().nullish(),
 });
 
 export const EnablePagesRequestSchema = z.object({
   owner: z.string().min(1, 'Owner is required'),
   repo: z.string().min(1, 'Repository name is required'),
-  branch: z.string().optional().default('main'),
-  path: z.string().optional().default('/'),
-  requestId: z.string().optional(),
+  branch: z.string().nullish().default('main'),
+  path: z.string().nullish().default('/'),
+  requestId: z.string().nullish(),
 });
 
 // Infer TypeScript types from zod schemas

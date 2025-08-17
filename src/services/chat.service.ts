@@ -54,7 +54,7 @@ class ChatService {
     // Generate new response ID
     const aiResponse = await aiService.processMessage({
       message: validatedRequest.msg,
-      lastResponseId: lastResponseId || undefined,
+      lastResponseId: lastResponseId || null,
       requestId: validatedRequest.requestId
     });
 
